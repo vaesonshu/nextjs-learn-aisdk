@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique @db.VarChar(255)
+  name         String?  @db.VarChar(255)
+  passwordHash String   @db.VarChar(60)
+  avatar       String?  @db.VarChar(2048)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  chats        Chat[]   @relation("UserChats")
+
+  // Define an index on the email field
+  @@index([email])
+}
+
+model Chat {
+  id        String    @id @default(cuid())
+  title     String    @default("新聊天") @db.VarChar(255)
+  model     String    @db.VarChar(255)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String?
+  user      User?     @relation("UserChats", fields: [userId], references: [id], onDelete: SetNull)
+  messages  Message[]
+
+  // Define an index on the userId field
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  role      String
+  content   String   @db.Text
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
